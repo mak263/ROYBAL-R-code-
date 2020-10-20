@@ -1,0 +1,91 @@
+#AESOPS DCE DESIGN - MINIMAL FRACTIONAL FACTORIAL DESIGN & ALLOCATING SUBJECTS TO CHOICE TASKS
+
+#install and load true random number package
+#install.packages("random", dependencies = T)
+library(random)
+
+#install and load DOE package
+#install.packages("DoE.base")
+library(DoE.base)
+
+## Create a dataframe for a fractional factorial design with 5 factors with 2 levels for 4 and 3 levels for 1
+frac.fact.list <-oa.design(factor.names=c("Default Quant","Account Just","Peer Performance","Pay4P","Harms"), nlevels=c(2,2,2,3,2))
+
+## Turn this list into a data frame
+cards <- data.frame(sapply(frac.fact.list,c))
+
+## Show Cards
+cards
+
+##check d-efficiency in sas since this isn't working:
+#install.packages("ExpertChoice")
+#main_effects <- fractional_factorial_efficiency(Default.Quant + "Account Just" + "Peer Performance" + "Pay4P" + "Harms", frac.fact.list)
+
+# Use combn() fxn to find all pairs (n choose 2)
+# Use t() fxn to transpose matrix so that rows are pairs
+paired.comp <-data.frame(t(combn(1:12,2)))
+
+# add names to columns and display all possible combinations
+names(paired.comp)[1] <- "Profile A"
+names(paired.comp)[2] <- "Profile B"
+paired.comp
+
+# add a random order column with which to sort on (max=number of rows (combinations) in paired.comp) 
+paired.comp_random <- randomSequence(min=1, max=66, check=TRUE)
+# make random order matrix into a data.frame
+df3 <- data.frame(paired.comp_random)
+# add random.order to data frame
+paired.comp <- cbind(paired.comp, df3)
+# name that column
+names(paired.comp)[3] <- "Random_Order"
+# Sort pairs by random number
+# display paired comparisons
+paired.comp <- paired.comp[order(paired.comp_random),]
+paired.comp
+
+# Display a list of paired comparisons given to each subject
+# that completes the fractional design
+# for each divisor of the design
+
+# Function that finds divisors
+divisors <- function(x){
+     #  Vector of numbers to test against
+       y <- seq_len(x)
+       #  Modulo division. If remainder is 0 that number is a divisor of x so return it
+         y[ x%%y == 0 ] }
+
+# Put divisors of design into a vector
+design.divisors <- divisors(length(paired.comp[[1]]))
+for(i in 1:length(design.divisors)){
+  z <- expand.grid(seq(1:(length(paired.comp[[1]])/design.divisors[i])),seq(1:design.divisors[i]))
+  paired.comp <- cbind(paired.comp, z$Var2)
+  colnames(paired.comp)[length(paired.comp)] <- paste("Subject ID", i, sep = "")
+}
+
+#now generate multiple random lists divided into 6 choice tasks (enough for 500 respondents):
+cards
+rm(paired.comp)
+
+paired.comp <-data.frame(t(combn(1:12,2)))
+names(paired.comp)[1] <- "Profile A"
+names(paired.comp)[2] <- "Profile B"
+paired.comp
+
+# add a random order column with which to sort on (max=number of rows in paired.comp) 
+rm(random1)
+rm(paired.comp1)
+random1 <- randomSequence(min=1, max=66, check=TRUE)
+# make random order vector a data.frame
+df1 <- data.frame(random1)
+# add random.order to data frame
+paired.comp1 <- cbind(paired.comp, df1)
+# name that column
+names(paired.comp1)[3] <- "Random_Order"
+# Sort pairs by random number
+
+# display paired comparisons
+paired.comp1 <- paired.comp1[order(random1),]
+z <- expand.grid(seq(1:(length(paired.comp1[[1]])/11)),seq(1:11))
+paired.comp1 <- cbind(paired.comp1, z$Var2)
+colnames(paired.comp1)[length(paired.comp1)] <- paste("Subject ID", 1, sep = "")
+View(paired.comp1)
